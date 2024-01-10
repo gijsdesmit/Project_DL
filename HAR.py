@@ -129,6 +129,8 @@ print('numColumns: ' + str(numOfColumns))
 print('numClasses: ' + str(numClasses))
 
 #%%
+# ---- Old Keras implementation ----
+
 # def cnnModel():
 #     model = Sequential()
 #     # adding the first convolutionial layer with 32 filters and 5 by 5 kernal size, using the rectifier as the activation function
@@ -162,6 +164,9 @@ np.save('trainData.npy',trainX)
 np.save('trainLabels.npy',trainY)
 
 #%%
+
+# ------------ Our own implementation of the model architecture in PyTorch --------------
+
 from torch.utils.data import TensorDataset, DataLoader
 import torch
 from torch import nn
