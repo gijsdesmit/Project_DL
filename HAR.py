@@ -227,6 +227,7 @@ for epoch in range(Epochs):
         train_loss += loss.item() * inputs.size(0)
     train_loss = train_loss/len(train_loader.dataset)
 
+    # Testing loop
     model.eval()
     test_loss = 0.0
     correct = 0
