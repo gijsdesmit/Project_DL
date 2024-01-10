@@ -129,33 +129,33 @@ print('numColumns: ' + str(numOfColumns))
 print('numClasses: ' + str(numClasses))
 
 #%%
-def cnnModel():
-    model = Sequential()
-    # adding the first convolutionial layer with 32 filters and 5 by 5 kernal size, using the rectifier as the activation function
-    model.add(Conv2D(numFilters, (kernalSize1,kernalSize1),input_shape=(numOfRows, numOfColumns,1),activation='relu'))
-    # adding a maxpooling layer
-    model.add(MaxPooling2D(pool_size=(poolingWindowSz,poolingWindowSz),padding='valid'))
-    # adding a dropout layer for the regularization and avoiding over fitting
-    model.add(Dropout(dropOutRatio))
-    # flattening the output in order to apply the fully connected layer
-    model.add(Flatten())
-    # adding first fully connected layer with 256 outputs
-    model.add(Dense(numNueronsFCL1, activation='relu'))
-    #adding second fully connected layer 128 outputs
-    model.add(Dense(numNueronsFCL2, activation='relu'))
-    # adding softmax layer for the classification
-    model.add(Dense(numClasses, activation='softmax'))
-    # Compiling the model to generate a model
-    adam = optimizers.Adam(lr = 0.001, decay=1e-6)
-    model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
-    return model
-model = cnnModel()
-for layer in model.layers:
-    print(layer.name)
-model.fit(trainX,trainY, validation_split=1-trainSplitRatio,epochs=10,batch_size=batchSize,verbose=2)
-score = model.evaluate(testX,testY,verbose=2)
-print('Baseline Error: %.2f%%' %(100-score[1]*100))
-model.save('model.h5')
+# def cnnModel():
+#     model = Sequential()
+#     # adding the first convolutionial layer with 32 filters and 5 by 5 kernal size, using the rectifier as the activation function
+#     model.add(Conv2D(numFilters, (kernalSize1,kernalSize1),input_shape=(numOfRows, numOfColumns,1),activation='relu'))
+#     # adding a maxpooling layer
+#     model.add(MaxPooling2D(pool_size=(poolingWindowSz,poolingWindowSz),padding='valid'))
+#     # adding a dropout layer for the regularization and avoiding over fitting
+#     model.add(Dropout(dropOutRatio))
+#     # flattening the output in order to apply the fully connected layer
+#     model.add(Flatten())
+#     # adding first fully connected layer with 256 outputs
+#     model.add(Dense(numNueronsFCL1, activation='relu'))
+#     #adding second fully connected layer 128 outputs
+#     model.add(Dense(numNueronsFCL2, activation='relu'))
+#     # adding softmax layer for the classification
+#     model.add(Dense(numClasses, activation='softmax'))
+#     # Compiling the model to generate a model
+#     adam = optimizers.Adam(lr = 0.001, decay=1e-6)
+#     model.compile(loss='categorical_crossentropy', optimizer=adam, metrics=['accuracy'])
+#     return model
+# model = cnnModel()
+# for layer in model.layers:
+#     print(layer.name)
+# model.fit(trainX,trainY, validation_split=1-trainSplitRatio,epochs=10,batch_size=batchSize,verbose=2)
+# score = model.evaluate(testX,testY,verbose=2)
+# print('Baseline Error: %.2f%%' %(100-score[1]*100))
+# model.save('model.h5')
 np.save('groundTruth.npy',testY)
 np.save('testData.npy',testX)
 np.save('trainData.npy',trainX)
