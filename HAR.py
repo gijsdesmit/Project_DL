@@ -158,10 +158,11 @@ print('numClasses: ' + str(numClasses))
 # score = model.evaluate(testX,testY,verbose=2)
 # print('Baseline Error: %.2f%%' %(100-score[1]*100))
 # model.save('model.h5')
-np.save('groundTruth.npy',testY)
-np.save('testData.npy',testX)
-np.save('trainData.npy',trainX)
-np.save('trainLabels.npy',trainY)
+
+#np.save('groundTruth.npy',testY)
+#np.save('testData.npy',testX)
+#np.save('trainData.npy',trainX)
+#np.save('trainLabels.npy',trainY)
 
 #%%
 
@@ -211,7 +212,38 @@ class PyTorchModel(nn.Module):
         x = self.fc3(x)
         return x
 
-model = PyTorchModel()
+n_pc = 92 #number of padded columns # increase way more, try 110x10
+n_pr = 7 #number of padded rows, make 5?
+
+class PyTorchModel_defended(nn.Module):
+    def __init__(self):
+        super(PyTorchModel_defended, self).__init__()
+        self.conv1 = nn.Conv2d(numChannels, numFilters, (kernalSize1, kernalSize1))
+        self.pool = nn.MaxPool2d((poolingWindowSz, poolingWindowSz))
+        self.dropout = nn.Dropout(dropOutRatio)
+        self.fc1 = nn.Linear(numFilters * ((n_pr - kernalSize1 + 1) // poolingWindowSz) * ((n_pc - kernalSize1 + 1) // poolingWindowSz), numNueronsFCL1)
+        self.fc2 = nn.Linear(numNueronsFCL1, numNueronsFCL2)
+        self.fc3 = nn.Linear(numNueronsFCL2, numClasses)
+
+    def forward(self, x):
+        # x has shape: (batchSize, numChannels, numOfRows or timesteps, numOfColumns)
+
+        # (batchsize, 1, 90, 3)
+        padded_x = torch.zeros((x.shape[0], x.shape[1], n_pc, n_pr))
+        #height_offset = np.random.randint(0, n_pc - x.shape[2])
+        #width_offset = np.random.randint(0, n_pr - x.shape[3])
+        height_offset, width_offset = np.random.randint(0, 3, size=2)
+        padded_x[:, :, height_offset:height_offset+90, width_offset:width_offset+3] = x
+        x = padded_x
+        x = self.pool(F.relu(self.conv1(x)))
+        x = self.dropout(x)
+        x = x.view(-1, numFilters * ((n_pr - kernalSize1 + 1) // poolingWindowSz) * ((n_pc - kernalSize1 + 1) // poolingWindowSz))
+        x = F.relu(self.fc1(x))
+        x = F.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
+
+model = PyTorchModel_defended()
 
 # Define the optimizer
 optimizer = Adam(model.parameters(), lr=0.001, weight_decay=1e-6)
@@ -221,6 +253,7 @@ criterion = nn.CrossEntropyLoss()
 
 # Training loop
 for epoch in range(Epochs):
+    print('Starting training...')
     model.train()
     train_loss = 0.0
     for inputs, labels in train_loader:
@@ -251,4 +284,7 @@ for epoch in range(Epochs):
     print(f'Epoch: {epoch+1}, Training Loss: {train_loss:.4f}, Test Loss: {test_loss:.4f}, Test Accuracy: {test_accuracy:.4f}')
 
 # Save the trained model
-torch.save(model.state_dict(), 'model_pytorch.pth')
+#torch.save(model.state_dict(), 'model_pytorch.pth')
+
+#%%
+torch.save(model.state_dict(), 'model_pytorch_defended.pth')
