@@ -10,8 +10,9 @@ from model import PyTorchModel, PyTorchModel_defended
 
 #%%
 
-random_seed = 611
-np.random.seed(random_seed)
+# DON'T SET RANDOM SEED BECAUSE THE DEFENSE MUST BE RANDOM, but maybe here doesn't matter?
+# random_seed = 611
+# np.random.seed(random_seed)
 
 ## Define variables
 
@@ -92,8 +93,11 @@ for epoch in range(Epochs):
     print(f'Epoch: {epoch+1}, Training Loss: {train_loss:.4f}, Test Loss: {test_loss:.4f}, Test Accuracy: {test_accuracy:.4f}')
     torch.save(model.state_dict(), 'model_temp.pth') # Save temporary model
 
+#%%
 # Save the trained model
 #torch.save(model.state_dict(), 'model_pytorch.pth')
+print('Saved undefended model.')
 
 #%%
 torch.save(model.state_dict(), 'model_pytorch_defended.pth')
+print('Saved defended model.')
