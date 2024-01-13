@@ -54,15 +54,15 @@ test_loader = DataLoader(test_data, batch_size=batchSize, shuffle=False)
 
 #Comment/uncomment to load chosen model
 
-load_model_file = 'model_pytorch.pth'
+#model = PyTorchModel()
+model = PyTorchModel_defended()
+
+#load_model_file = 'model_pytorch.pth'
 #load_model_file = 'model_pytorch_defended.pth'
-
-model = PyTorchModel()
-#model = PyTorchModel_defended()
-
+load_model_file = 'model_pytorch_defended_i3.pth'
 save_model_file = load_model_file # Change to save model to different file
 
-model.load_state_dict(torch.load(load_model_file)) # uncomment to load defended model and train it further
+model.load_state_dict(torch.load(load_model_file)) # uncomment to load model and train it further
 
 # Define the optimizer
 optimizer = Adam(model.parameters(), lr=0.001, weight_decay=1e-6)
@@ -104,6 +104,8 @@ for epoch in range(Epochs):
     torch.save(model.state_dict(), 'model_temp.pth') # Save temporary model
 
 #%%
-# Save the trained model
-torch.save(model.state_dict(), save_model_file)
-print(f'Saved model to {save_model_file}.')
+# Save the trained model, comment/uncomment
+#torch.save(model.state_dict(), save_model_file)
+#print(f'Saved model to {save_model_file}.')
+
+#%%
