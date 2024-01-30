@@ -100,19 +100,21 @@ dataset = readData('actitracker_raw.txt')
 #     subset = dataset[dataset['activity']==activity][:180]
 #     plotActivity(activity,subset)
 # segmenting the signal in overlapping windows of 90 samples with 50% overlap
-segments, labels = segment_signal(dataset)
+# segments, labels = segment_signal(dataset)
 # Normalize the segments
-segments = featureNormalize(segments)
+# segments = featureNormalize(segments)
 #categorically defining the classes of the activities
-labels = np.asarray(pd.get_dummies(labels),dtype = np.int8)
+# labels = np.asarray(pd.get_dummies(labels),dtype = np.int8)
 # defining parameters for the input and network layers
 # we are treating each segmeent or chunk as a 2D image (90 X 3)
 
 cur_time = datetime.datetime.now()
 print(f"point {3}  {cur_time}  {cur_time - start_time} ")
 
-numOfRows = segments.shape[1]
-numOfColumns = segments.shape[2]
+# numOfRows = segments.shape[1]
+# numOfColumns = segments.shape[2]
+numOfRows = 3
+numOfColumns = 90
 numChannels = 1
 numFilters = 128 # number of filters in Conv2D layer
 # kernal size of the Conv2D layer
@@ -129,11 +131,11 @@ Epochs = 30
 # batchsize
 batchSize = 10
 # number of total clases
-numClasses = labels.shape[1]
+numClasses = 6
 # dropout ratio for dropout layer
 dropOutRatio = 0.2
 # reshaping the data for network input
-reshapedSegments = segments.reshape(segments.shape[0], numOfRows, numOfColumns,1)
+# reshapedSegments = segments.reshape(segments.shape[0], numOfRows, numOfColumns,1)
 # # splitting in training and testing data
 # trainSplit = np.random.rand(len(reshapedSegments)) < trainSplitRatio
 # trainX = reshapedSegments[trainSplit]
@@ -226,6 +228,9 @@ test_data = TensorDataset(testX_torch, testY_torch)
 train_loader = DataLoader(train_data, batch_size=batchSize, shuffle=True)
 test_loader = DataLoader(test_data, batch_size=batchSize, shuffle=False)
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+print(device)
+
 class PyTorchModel(nn.Module):
     def __init__(self):
         super(PyTorchModel, self).__init__()
@@ -250,8 +255,8 @@ class PyTorchModel(nn.Module):
 cur_time = datetime.datetime.now()
 print(f"point {7}   {cur_time}  {cur_time - start_time} ")
 
-n_pc = 92 #number of padded columns # increase way more, try 110x10
-n_pr = 7 #number of padded rows, make 5?
+n_pc = 150 #number of padded columns # increase way more, try 110x10
+n_pr = 5 #number of padded rows, make 5?
 
 class PyTorchModel_defended(nn.Module):
     def __init__(self):
@@ -267,12 +272,14 @@ class PyTorchModel_defended(nn.Module):
         # x has shape: (batchSize, numChannels, numOfRows or timesteps, numOfColumns)
 
         # (batchsize, 1, 90, 3)
+
         padded_x = torch.zeros((x.shape[0], x.shape[1], n_pc, n_pr))
         #height_offset = np.random.randint(0, n_pc - x.shape[2])
         #width_offset = np.random.randint(0, n_pr - x.shape[3])
         height_offset, width_offset = np.random.randint(0, 3, size=2)
         padded_x[:, :, height_offset:height_offset+90, width_offset:width_offset+3] = x
-        x = padded_x
+        x = padded_x.to(device)
+
         x = self.pool(F.relu(self.conv1(x)))
         x = self.dropout(x)
         x = x.view(-1, numFilters * ((n_pr - kernalSize1 + 1) // poolingWindowSz) * ((n_pc - kernalSize1 + 1) // poolingWindowSz))
@@ -282,6 +289,7 @@ class PyTorchModel_defended(nn.Module):
         return x
 
 model = PyTorchModel_defended()
+model = model.to(device)
 
 # Define the optimizer
 optimizer = Adam(model.parameters(), lr=0.001, weight_decay=1e-6)
@@ -290,7 +298,7 @@ optimizer = Adam(model.parameters(), lr=0.001, weight_decay=1e-6)
 criterion = nn.CrossEntropyLoss()
 
 cur_time = datetime.datetime.now()
-print(f"point {8}  {cur_time} {cur_time - start_time} ")
+print(f"point 8  {cur_time} {cur_time - start_time} ")
 
 # Training loop
 for epoch in range(Epochs):
@@ -298,9 +306,16 @@ for epoch in range(Epochs):
     model.train()
     train_loss = 0.0
     for inputs, labels in train_loader:
+
+
+        inputs = inputs.to(device)
+        labels = labels.to(device)
         optimizer.zero_grad()
+
+
         outputs = model(inputs)
         loss = criterion(outputs, labels)
+
         loss.backward()
         optimizer.step()
         train_loss += loss.item() * inputs.size(0)
@@ -313,6 +328,8 @@ for epoch in range(Epochs):
     total = 0
     with torch.no_grad():
         for inputs, labels in test_loader:
+            inputs = inputs.to(device)
+            labels = labels.to(device)
             outputs = model(inputs)
             loss = criterion(outputs, labels)
             test_loss += loss.item() * inputs.size(0)
@@ -323,7 +340,7 @@ for epoch in range(Epochs):
     test_accuracy = correct / total
 
     cur_time = datetime.datetime.now()
-    print(f"point {8.}{epoch} {cur_time} {cur_time - start_time} ")
+    print(f"point 8.{epoch} {cur_time} {cur_time - start_time} ")
     
     print(f'Epoch: {epoch+1}, Training Loss: {train_loss:.4f}, Test Loss: {test_loss:.4f}, Test Accuracy: {test_accuracy:.4f}')
 
@@ -335,4 +352,4 @@ print(f"point {9}  {cur_time} {cur_time - start_time} ")
 # torch.save(model.state_dict(), 'model_pytorch_balanced.pth')
 
 #%%
-torch.save(model.state_dict(), 'model_pytorch_defended_balanced_30ep.pth')
+torch.save(model.state_dict(), 'model_pytorch_defended_balanced_30ep_2.pth')
