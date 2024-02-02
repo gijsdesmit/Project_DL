@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+ #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Wed Sep 27 14:34:20 2017
@@ -15,10 +15,10 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import stats
-from keras.models import Sequential
-from keras.layers import Dense, Conv2D, MaxPooling2D, Flatten, Dropout
+# from keras.models import Sequential
+# from keras.layers import Dense, Conv2D, MaxPooling2D, Flatten, Dropout
 #from keras import backend as K
-from keras import optimizers
+# from keras import optimizers
 #K.set_image_dim_ordering('th')
 # setting up a random seed for reproducibility
 random_seed = 611
@@ -81,9 +81,9 @@ def segment_signal(data, window_size = 90):
 # Path of file #
 dataset = readData('actitracker_raw.txt')
 # plotting a subset of the data to visualize
-for activity in np.unique(dataset['activity']):
-    subset = dataset[dataset['activity']==activity][:180]
-    plotActivity(activity,subset)
+# for activity in np.unique(dataset['activity']):
+#     subset = dataset[dataset['activity']==activity][:180]
+#     plotActivity(activity,subset)
 # segmenting the signal in overlapping windows of 90 samples with 50% overlap
 segments, labels = segment_signal(dataset)
 # Normalize the segments
@@ -202,6 +202,7 @@ class PyTorchModel(nn.Module):
         self.fc1 = nn.Linear(numFilters * ((numOfRows - kernalSize1 + 1) // poolingWindowSz) * ((numOfColumns - kernalSize1 + 1) // poolingWindowSz), numNueronsFCL1)
         self.fc2 = nn.Linear(numNueronsFCL1, numNueronsFCL2)
         self.fc3 = nn.Linear(numNueronsFCL2, numClasses)
+        self.softmax = nn.Softmax()
 
     def forward(self, x):
         x = self.pool(F.relu(self.conv1(x)))
@@ -210,6 +211,7 @@ class PyTorchModel(nn.Module):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
+        x = self.softmax(x)
         return x
 
 n_pc = 92 #number of padded columns # increase way more, try 110x10
